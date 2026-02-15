@@ -2,8 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/nicegui-org/nicegui/main/nicegui/static/tauri/capabilities-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
-    "core:default"
+    "core:default",
+    "sql:default",
+    "shell:default",
+    "shell:allow-execute",
+    "shell:allow-open"
   ]
 }
