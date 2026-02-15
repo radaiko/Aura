@@ -1,3 +1,5 @@
+mod auth;
+
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -16,6 +18,10 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_shell::init())
+        .invoke_handler(tauri::generate_handler![
+            auth::check_github_auth,
+            auth::get_github_token,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
