@@ -1,14 +1,24 @@
 import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { useRepos, type LocalRepo } from "../hooks/useRepos";
 import Database from "@tauri-apps/plugin-sql";
+
+interface SessionTool {
+  id: string;
+  name: string;
+  available: boolean;
+  category: string;
+}
 
 export function ReposPage() {
   const { repos, loading, error, scan } = useRepos();
   const [roots, setRoots] = useState<string[]>([]);
   const [newRoot, setNewRoot] = useState("");
+  const [tools, setTools] = useState<SessionTool[]>([]);
 
-  // Load saved scan roots from DB
+  // Load saved scan roots from DB and detect tools
   useEffect(() => {
+    invoke<SessionTool[]>("detect_session_tools").then(setTools);
     (async () => {
       const db = await Database.load("sqlite:aura.db");
       const rows = await db.select<{ path: string }[]>(
@@ -80,7 +90,7 @@ export function ReposPage() {
       {!loading && repos.length > 0 && (
         <ul className="space-y-1">
           {repos.map((repo) => (
-            <RepoRow key={repo.path} repo={repo} />
+            <RepoRow key={repo.path} repo={repo} tools={tools} />
           ))}
         </ul>
       )}
@@ -92,7 +102,17 @@ export function ReposPage() {
   );
 }
 
-function RepoRow({ repo }: { repo: LocalRepo }) {
+function RepoRow({ repo, tools }: { repo: LocalRepo; tools: SessionTool[] }) {
+  const availableTools = tools.filter((t) => t.available);
+
+  const launch = async (toolId: string) => {
+    try {
+      await invoke("launch_session", { toolId, repoPath: repo.path });
+    } catch (err) {
+      console.error("Failed to launch:", err);
+    }
+  };
+
   return (
     <div className="flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-zinc-900 transition-colors group">
       <div className="min-w-0 flex-1">
@@ -104,9 +124,19 @@ function RepoRow({ repo }: { repo: LocalRepo }) {
         </p>
         <p className="text-xs text-zinc-500 truncate">{repo.path}</p>
       </div>
-      <div className="flex items-center gap-3 shrink-0">
-        <span className="text-xs text-zinc-500 font-mono">{repo.current_branch}</span>
+      <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        {availableTools.map((tool) => (
+          <button
+            key={tool.id}
+            onClick={() => launch(tool.id)}
+            title={tool.name}
+            className="text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"
+          >
+            {tool.name}
+          </button>
+        ))}
       </div>
+      <span className="text-xs text-zinc-500 font-mono ml-3">{repo.current_branch}</span>
     </div>
   );
 }
