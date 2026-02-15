@@ -1,5 +1,8 @@
 mod auth;
+mod azure;
+mod fogbugz;
 mod github;
+mod jira;
 mod repos;
 mod sessions;
 
@@ -31,6 +34,13 @@ pub fn run() {
             repos::list_directories,
             sessions::detect_session_tools,
             sessions::launch_session,
+            azure::check_azure_auth,
+            azure::azure_fetch_work_items,
+            azure::azure_fetch_prs,
+            jira::check_jira_auth,
+            jira::jira_fetch_issues,
+            fogbugz::check_fogbugz_auth,
+            fogbugz::fogbugz_fetch_cases,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

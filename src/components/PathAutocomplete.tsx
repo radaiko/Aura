@@ -100,18 +100,18 @@ export function PathAutocomplete({
         onKeyDown={handleKeyDown}
         onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
         placeholder={placeholder}
-        className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500"
+        className="w-full bg-base border border-border rounded-md px-3 py-1.5 text-sm text-text-primary font-mono placeholder-text-tertiary focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
       />
       {showSuggestions && suggestions.length > 0 && (
-        <ul className="absolute z-10 top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-md overflow-hidden shadow-lg max-h-60 overflow-y-auto">
+        <ul className="absolute z-10 top-full left-0 right-0 mt-1 bg-raised border border-border rounded-md overflow-hidden shadow-lg max-h-60 overflow-y-auto">
           {suggestions.map((path, i) => (
             <li key={path}>
               <button
                 onClick={() => selectSuggestion(path)}
                 className={`w-full text-left px-3 py-1.5 text-sm font-mono truncate transition-colors ${
                   i === selectedIndex
-                    ? "bg-zinc-700 text-white"
-                    : "text-zinc-300 hover:bg-zinc-800"
+                    ? "bg-accent-muted text-white"
+                    : "text-text-primary hover:bg-hover"
                 }`}
               >
                 {path}

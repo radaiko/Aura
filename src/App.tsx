@@ -10,10 +10,18 @@ function App() {
 
   return (
     <AppLayout activePage={page} onNavigate={setPage}>
-      {page === "issues" && <IssuesPage />}
-      {page === "prs" && <PullRequestsPage />}
-      {page === "repos" && <ReposPage />}
-      {page === "settings" && <SettingsPage />}
+      <div style={{ display: page === "issues" ? undefined : "none" }}>
+        <IssuesPage active={page === "issues"} />
+      </div>
+      <div style={{ display: page === "prs" ? undefined : "none" }}>
+        <PullRequestsPage active={page === "prs"} />
+      </div>
+      <div style={{ display: page === "repos" ? undefined : "none" }}>
+        <ReposPage active={page === "repos"} />
+      </div>
+      <div style={{ display: page === "settings" ? undefined : "none" }}>
+        <SettingsPage active={page === "settings"} />
+      </div>
     </AppLayout>
   );
 }

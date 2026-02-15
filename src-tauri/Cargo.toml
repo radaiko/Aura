@@ -21,3 +21,4 @@ tauri-plugin-shell = "2"
 reqwest = { version = "0.13.2", features = ["json", "query"] }
 tokio = { version = "1.49.0", features = ["process"] }
 keyring = "3.6.3"
+base64 = "0.22.1"
