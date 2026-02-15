@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useGitHubAuth } from "../hooks/useGitHub";
 import { invoke } from "@tauri-apps/api/core";
+import { PathAutocomplete } from "../components/PathAutocomplete";
 import Database from "@tauri-apps/plugin-sql";
 
 interface SessionTool {
@@ -118,13 +119,11 @@ export function SettingsPage() {
           ))}
         </div>
         <div className="flex gap-2">
-          <input
-            type="text"
+          <PathAutocomplete
             value={newRoot}
-            onChange={(e) => setNewRoot(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addRoot()}
+            onChange={setNewRoot}
+            onSubmit={addRoot}
             placeholder="/Users/you/dev"
-            className="flex-1 bg-zinc-900 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500"
           />
           <button
             onClick={addRoot}

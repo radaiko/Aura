@@ -115,6 +115,60 @@ pub fn scan_repos(roots: Vec<String>, max_depth: Option<u32>) -> Vec<LocalRepo> 
     discover_repos(&roots, max_depth.unwrap_or(4))
 }
 
+/// List subdirectories for path autocomplete
+#[tauri::command]
+pub fn list_directories(partial: String) -> Vec<String> {
+    let path = Path::new(&partial);
+
+    // If the partial path ends with '/', list its children
+    // Otherwise, list siblings matching the prefix
+    let (parent, prefix) = if partial.ends_with('/') || partial.ends_with(std::path::MAIN_SEPARATOR)
+    {
+        (path.to_path_buf(), String::new())
+    } else {
+        let parent = path.parent().unwrap_or(Path::new("/")).to_path_buf();
+        let prefix = path
+            .file_name()
+            .map(|n| n.to_string_lossy().to_lowercase())
+            .unwrap_or_default();
+        (parent, prefix)
+    };
+
+    let entries = match std::fs::read_dir(&parent) {
+        Ok(e) => e,
+        Err(_) => return vec![],
+    };
+
+    let mut dirs: Vec<String> = entries
+        .flatten()
+        .filter(|e| {
+            if !e.path().is_dir() {
+                return false;
+            }
+            let name = e.file_name().to_string_lossy().to_lowercase();
+            // Skip hidden directories unless user explicitly typed a dot
+            if name.starts_with('.') && !prefix.starts_with('.') {
+                return false;
+            }
+            if prefix.is_empty() {
+                return true;
+            }
+            name.starts_with(&prefix)
+        })
+        .map(|e| {
+            let mut p = e.path().to_string_lossy().to_string();
+            if !p.ends_with('/') {
+                p.push('/');
+            }
+            p
+        })
+        .collect();
+
+    dirs.sort();
+    dirs.truncate(10);
+    dirs
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

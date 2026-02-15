@@ -28,6 +28,7 @@ pub fn run() {
             github::github_fetch_prs,
             github::github_fetch_user,
             repos::scan_repos,
+            repos::list_directories,
             sessions::detect_session_tools,
             sessions::launch_session,
         ])

@@ -133,10 +133,7 @@ pub async fn fetch_assigned_issues(token: &str) -> Result<Vec<GitHubIssue>, Stri
 /// Fetch PRs where user is author or review-requested
 pub async fn fetch_assigned_prs(token: &str, username: &str) -> Result<Vec<GitHubIssue>, String> {
     let client = reqwest::Client::new();
-    let query = format!(
-        "type:pr is:open (author:{} OR review-requested:{})",
-        username, username
-    );
+    let query = format!("type:pr is:open involves:{}", username);
 
     let resp = client
         .get(format!("{}/search/issues", GITHUB_API))

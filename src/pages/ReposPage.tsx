@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useRepos, type LocalRepo } from "../hooks/useRepos";
+import { PathAutocomplete } from "../components/PathAutocomplete";
 import Database from "@tauri-apps/plugin-sql";
 
 interface SessionTool {
@@ -15,11 +16,16 @@ export function ReposPage() {
   const [roots, setRoots] = useState<string[]>([]);
   const [newRoot, setNewRoot] = useState("");
   const [tools, setTools] = useState<SessionTool[]>([]);
+  const [dbError, setDbError] = useState<string | null>(null);
 
   // Load saved scan roots from DB and detect tools
   useEffect(() => {
-    invoke<SessionTool[]>("detect_session_tools").then(setTools);
-    (async () => {
+    invoke<SessionTool[]>("detect_session_tools").then(setTools).catch(() => {});
+    loadRoots();
+  }, []);
+
+  const loadRoots = async () => {
+    try {
       const db = await Database.load("sqlite:aura.db");
       const rows = await db.select<{ path: string }[]>(
         "SELECT path FROM scan_roots"
@@ -29,21 +35,42 @@ export function ReposPage() {
       if (paths.length > 0) {
         scan(paths);
       }
-    })();
-  }, [scan]);
+    } catch (err) {
+      setDbError(String(err));
+    }
+  };
 
   const addRoot = async () => {
-    const trimmed = newRoot.trim();
+    const trimmed = newRoot.trim().replace(/\/+$/, "");
     if (!trimmed || roots.includes(trimmed)) return;
-    const db = await Database.load("sqlite:aura.db");
-    await db.execute(
-      "INSERT OR IGNORE INTO scan_roots (id, path) VALUES (?, ?)",
-      [crypto.randomUUID(), trimmed]
-    );
-    const updated = [...roots, trimmed];
-    setRoots(updated);
-    setNewRoot("");
-    scan(updated);
+    try {
+      const db = await Database.load("sqlite:aura.db");
+      await db.execute(
+        "INSERT OR IGNORE INTO scan_roots (id, path) VALUES (?, ?)",
+        [crypto.randomUUID(), trimmed]
+      );
+      const updated = [...roots, trimmed];
+      setRoots(updated);
+      setNewRoot("");
+      setDbError(null);
+      scan(updated);
+    } catch (err) {
+      setDbError(String(err));
+    }
+  };
+
+  const removeRoot = async (path: string) => {
+    try {
+      const db = await Database.load("sqlite:aura.db");
+      await db.execute("DELETE FROM scan_roots WHERE path = ?", [path]);
+      const updated = roots.filter((r) => r !== path);
+      setRoots(updated);
+      if (updated.length > 0) {
+        scan(updated);
+      }
+    } catch (err) {
+      setDbError(String(err));
+    }
   };
 
   return (
@@ -61,20 +88,42 @@ export function ReposPage() {
         )}
       </div>
 
-      {roots.length === 0 && (
+      {roots.length === 0 && !dbError && (
         <p className="text-zinc-400 mb-4">
           Add a directory to scan for local Git repositories.
         </p>
       )}
 
+      {dbError && (
+        <p className="text-red-400 text-sm mb-4">{dbError}</p>
+      )}
+
+      {/* Configured scan roots */}
+      {roots.length > 0 && (
+        <div className="space-y-1 mb-4">
+          {roots.map((root) => (
+            <div
+              key={root}
+              className="flex items-center justify-between bg-zinc-900 rounded-md px-3 py-1.5"
+            >
+              <span className="text-xs text-zinc-400 font-mono truncate">{root}</span>
+              <button
+                onClick={() => removeRoot(root)}
+                className="text-xs text-zinc-600 hover:text-red-400 transition-colors ml-2 shrink-0"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="flex gap-2 mb-6">
-        <input
-          type="text"
+        <PathAutocomplete
           value={newRoot}
-          onChange={(e) => setNewRoot(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addRoot()}
+          onChange={setNewRoot}
+          onSubmit={addRoot}
           placeholder="/Users/you/dev"
-          className="flex-1 bg-zinc-900 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500"
         />
         <button
           onClick={addRoot}
@@ -95,7 +144,7 @@ export function ReposPage() {
         </ul>
       )}
 
-      {!loading && repos.length === 0 && roots.length > 0 && (
+      {!loading && repos.length === 0 && roots.length > 0 && !error && (
         <p className="text-zinc-500">No Git repositories found in the configured directories.</p>
       )}
     </div>
