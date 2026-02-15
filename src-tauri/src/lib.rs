@@ -1,4 +1,5 @@
 mod auth;
+mod github;
 
 use tauri_plugin_sql::{Migration, MigrationKind};
 
@@ -21,6 +22,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             auth::check_github_auth,
             auth::get_github_token,
+            github::github_fetch_issues,
+            github::github_fetch_prs,
+            github::github_fetch_user,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
