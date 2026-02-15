@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+import { getVersion } from "@tauri-apps/api/app";
+import { useUpdater } from "../hooks/useUpdater";
 
 type Page = "issues" | "prs" | "repos" | "settings";
 
@@ -60,6 +62,13 @@ export function AppLayout({
   onNavigate: (page: Page) => void;
   children: ReactNode;
 }) {
+  const { phase, version: updateVersion, downloadAndInstall } = useUpdater();
+  const [appVersion, setAppVersion] = useState<string>("");
+
+  useEffect(() => {
+    getVersion().then(setAppVersion);
+  }, []);
+
   const renderNavButton = (item: { id: Page; label: string; icon: React.ReactNode }) => {
     const isActive = activePage === item.id;
     return (
@@ -104,10 +113,38 @@ export function AppLayout({
 
         {/* Settings at bottom */}
         {renderNavButton(SETTINGS_ITEM)}
+
+        {/* Version */}
+        {appVersion && (
+          <span
+            className="text-[9px] font-mono text-text-tertiary/50 select-none pb-1 tracking-tight"
+            title={`Aura v${appVersion}`}
+          >
+            {appVersion}
+          </span>
+        )}
       </nav>
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">
+        {phase === "available" && (
+          <div className="bg-accent/10 border-b border-accent/20 px-4 py-2 flex items-center justify-between text-sm">
+            <span className="text-text-secondary">
+              Update available: <span className="font-medium text-accent">v{updateVersion}</span>
+            </span>
+            <button
+              onClick={downloadAndInstall}
+              className="px-3 py-1 rounded bg-accent text-white text-xs font-medium hover:bg-accent/90 transition-colors"
+            >
+              Update &amp; Restart
+            </button>
+          </div>
+        )}
+        {phase === "downloading" && (
+          <div className="bg-accent/10 border-b border-accent/20 px-4 py-2 text-sm text-text-secondary">
+            Downloading update…
+          </div>
+        )}
         <div key={activePage} className="max-w-5xl mx-auto p-6 animate-page-enter">
           {children}
         </div>

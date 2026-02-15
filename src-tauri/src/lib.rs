@@ -5,6 +5,7 @@ mod github;
 mod jira;
 mod repos;
 mod sessions;
+mod updater;
 
 use tauri_plugin_sql::{Migration, MigrationKind};
 
@@ -18,6 +19,7 @@ pub fn run() {
     }];
 
     tauri::Builder::default()
+        .manage(updater::UpdaterState(std::sync::Mutex::new(None)))
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations("sqlite:aura.db", migrations)
@@ -41,6 +43,9 @@ pub fn run() {
             jira::jira_fetch_issues,
             fogbugz::check_fogbugz_auth,
             fogbugz::fogbugz_fetch_cases,
+            updater::check_for_updates,
+            updater::download_update,
+            updater::install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
