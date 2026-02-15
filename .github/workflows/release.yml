@@ -30,9 +30,6 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             channel: osx-arm64
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            channel: osx-x64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             channel: win-x64

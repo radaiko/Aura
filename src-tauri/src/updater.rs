@@ -6,13 +6,11 @@ use velopack::*;
 const UPDATE_URL: &str = "https://github.com/radaiko/Aura/releases/latest/download";
 
 fn current_channel() -> &'static str {
-    #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+    #[cfg(target_os = "macos")]
     { "osx-arm64" }
-    #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
-    { "osx-x64" }
-    #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+    #[cfg(target_os = "windows")]
     { "win-x64" }
-    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    #[cfg(target_os = "linux")]
     { "linux-x64" }
 }
 
