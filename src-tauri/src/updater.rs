@@ -5,6 +5,17 @@ use velopack::*;
 
 const UPDATE_URL: &str = "https://github.com/radaiko/Aura/releases/latest/download";
 
+fn current_channel() -> &'static str {
+    #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+    { "osx-arm64" }
+    #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
+    { "osx-x64" }
+    #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+    { "win-x64" }
+    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    { "linux-x64" }
+}
+
 pub struct UpdaterState(pub Mutex<Option<UpdateManager>>);
 
 #[derive(Serialize, Clone)]
@@ -15,7 +26,11 @@ pub struct UpdateStatus {
 
 fn get_manager() -> Result<UpdateManager, String> {
     let source = sources::HttpSource::new(UPDATE_URL);
-    UpdateManager::new(source, None, None).map_err(|e| e.to_string())
+    let options = UpdateOptions {
+        ExplicitChannel: Some(current_channel().to_string()),
+        ..Default::default()
+    };
+    UpdateManager::new(source, Some(options), None).map_err(|e| e.to_string())
 }
 
 #[tauri::command]

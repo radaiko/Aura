@@ -29,16 +29,16 @@ jobs:
         include:
           - os: macos-latest
             target: aarch64-apple-darwin
-            vpk_args: ""
+            channel: osx-arm64
           - os: macos-latest
             target: x86_64-apple-darwin
-            vpk_args: ""
+            channel: osx-x64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            vpk_args: ""
+            channel: win-x64
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            vpk_args: ""
+            channel: linux-x64
 
     runs-on: ${{ matrix.os }}
 
@@ -91,7 +91,7 @@ jobs:
         run: dotnet tool install -g vpk
 
       - name: Download existing releases
-        run: vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} || true
+        run: vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --channel ${{ matrix.channel }} || true
 
       - name: Package with Velopack (macOS)
         if: runner.os == 'macOS'
@@ -101,7 +101,7 @@ jobs:
             -v ${{ needs.extract-version.outputs.version }} \
             -p src-tauri/target/${{ matrix.target }}/release \
             -e aura-app \
-            --channel ${{ matrix.target }}
+            --channel ${{ matrix.channel }}
 
       - name: Package with Velopack (Linux)
         if: runner.os == 'Linux'
@@ -111,7 +111,7 @@ jobs:
             -v ${{ needs.extract-version.outputs.version }} \
             -p src-tauri/target/${{ matrix.target }}/release \
             -e aura-app \
-            --channel ${{ matrix.target }}
+            --channel ${{ matrix.channel }}
 
       - name: Package with Velopack (Windows)
         if: runner.os == 'Windows'
@@ -121,7 +121,7 @@ jobs:
             -v ${{ needs.extract-version.outputs.version }} `
             -p src-tauri\target\${{ matrix.target }}\release `
             -e aura-app.exe `
-            --channel ${{ matrix.target }}
+            --channel ${{ matrix.channel }}
 
       - name: Upload to GitHub Releases
         run: |
@@ -131,5 +131,5 @@ jobs:
             --token ${{ secrets.GITHUB_TOKEN }} \
             --releaseName "Aura ${{ needs.extract-version.outputs.version }}" \
             --merge \
-            --channel ${{ matrix.target }}
+            --channel ${{ matrix.channel }}
         shell: bash
