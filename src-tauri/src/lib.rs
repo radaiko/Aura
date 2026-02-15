@@ -1,5 +1,6 @@
 mod auth;
 mod github;
+mod repos;
 
 use tauri_plugin_sql::{Migration, MigrationKind};
 
@@ -25,6 +26,7 @@ pub fn run() {
             github::github_fetch_issues,
             github::github_fetch_prs,
             github::github_fetch_user,
+            repos::scan_repos,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
